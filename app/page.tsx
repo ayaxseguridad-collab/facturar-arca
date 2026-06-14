@@ -41,28 +41,6 @@ export default function Home() {
   const [error, setError] = useState("");
   const [clientes, setClientes] = useState<ClientePreview[]>([]);
   const [expandido, setExpandido] = useState<number | null>(null);
-  const [enviandoEmails, setEnviandoEmails] = useState(false);
-  const [resultadoEmail, setResultadoEmail] = useState<{ enviados: number; sinEmail: number; errores: number } | null>(null);
-
-  async function handleEnviarEmails() {
-    if (!clientes.length) return;
-    setEnviandoEmails(true);
-    setResultadoEmail(null);
-    try {
-      const res = await fetch("/api/enviar-emails", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientes, mes, anio }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al enviar");
-      setResultadoEmail({ enviados: data.enviados, sinEmail: data.sinEmail, errores: data.errores });
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setEnviandoEmails(false);
-    }
-  }
 
   async function handleProcesar() {
     if (!archivo) { setError("Seleccioná un archivo de reporte"); return; }
@@ -184,25 +162,9 @@ export default function Home() {
                 Descargar Excel ARCA
               </button>
             )}
-            {clientes.length > 0 && (
-              <button
-                onClick={handleEnviarEmails}
-                disabled={enviandoEmails || cargando}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-semibold px-5 py-2 rounded-lg transition"
-              >
-                {enviandoEmails ? "Enviando..." : "Enviar emails"}
-              </button>
-            )}
           </div>
 
           {error && <p className="text-red-600 text-sm mt-3 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-          {resultadoEmail && (
-            <p className="text-sm mt-3 bg-indigo-50 text-indigo-800 rounded-lg px-3 py-2">
-              Emails enviados: <strong>{resultadoEmail.enviados}</strong>
-              {resultadoEmail.sinEmail > 0 && <> · Sin email en BD: <strong>{resultadoEmail.sinEmail}</strong></>}
-              {resultadoEmail.errores > 0 && <> · Errores: <strong>{resultadoEmail.errores}</strong></>}
-            </p>
-          )}
         </div>
 
         {/* Tabla de validación */}
