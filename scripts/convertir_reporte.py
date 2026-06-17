@@ -30,6 +30,11 @@ def nombre_display(cliente_raw: str) -> str:
         return f"{partes[1]} {partes[0]}"
     return f"{cliente_raw} {cliente_raw}"
 
+def aplicar_iva(importe: float, desc: str) -> float:
+    if re.search(r"canon|cobrador", desc, re.IGNORECASE):
+        return importe
+    return round(importe * 1.21, 2)
+
 def extraer_sv(codigo_alfa: str) -> str:
     """'SV-3854/0' → '3854'"""
     m = re.search(r"SV-([^/]+)", str(codigo_alfa), re.IGNORECASE)
@@ -109,7 +114,7 @@ def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
         # Calcular importes primero para poder poner el total como valor (no fórmula)
         importes = []
         for i, item in enumerate(items_extra[:7]):
-            importes.append(round(0.01 * item["cantidad"], 2) if item["importe"] > 0 else 0.0)
+            importes.append(aplicar_iva(item["importe"], item["desc"]) if item["importe"] > 0 else 0.0)
         for i in range(len(items_extra), 7):
             importes.append(0.0)
         total = round(sum(importes), 2)

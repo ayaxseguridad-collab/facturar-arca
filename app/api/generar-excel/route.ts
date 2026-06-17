@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       const importesCalc = itemsExtra.slice(0, 7).map(item =>
         modoPrueba
           ? (item.importe > 0 ? Math.round(0.01 * item.cantidad * 100) / 100 : 0)
-          : item.importe
+          : aplicarIva(item.importe, item.desc)
       );
       const totalCalc = Math.round(importesCalc.reduce((s, v) => s + v, 0) * 100) / 100;
 
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
         const base = ITEM_BASE_COLS[i];
         const importeARCA = modoPrueba
           ? (item.importe > 0 ? Math.round(0.01 * item.cantidad * 100) / 100 : 0.0)
-          : item.importe;
+          : aplicarIva(item.importe, item.desc);
         wsOut.getCell(r, base).value = float(i + 3);
         wsOut.getCell(r, base + 1).value = item.desc ? 1.0 : null;
         wsOut.getCell(r, base + 2).value = item.desc || null;
@@ -143,3 +143,8 @@ export async function POST(req: NextRequest) {
 }
 
 function float(n: number): number { return n + 0.0; }
+
+function aplicarIva(importe: number, desc: string): number {
+  if (/canon|cobrador/i.test(desc)) return importe;
+  return Math.round(importe * 1.21 * 100) / 100;
+}

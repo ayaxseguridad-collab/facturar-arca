@@ -12,6 +12,11 @@ function nombreDisplay(raw: string): string {
   return `${raw} ${raw}`;
 }
 
+function aplicarIva(importe: number, desc: string): number {
+  if (/canon|cobrador/i.test(desc)) return importe;
+  return Math.round(importe * 1.21 * 100) / 100;
+}
+
 function extraerSV(codigoAlfa: string): string {
   const m = codigoAlfa.match(/SV-([^/]+)/i);
   return m ? m[1] : codigoAlfa;
@@ -90,7 +95,7 @@ export async function POST(req: NextRequest) {
         ...item,
         importeARCA: modoPrueba
           ? (item.importe > 0 ? Math.round(0.01 * item.cantidad * 100) / 100 : 0)
-          : item.importe,
+          : aplicarIva(item.importe, item.desc),
       }));
 
       const totalReal = itemsExtra.reduce((s, i) => s + i.importe, 0);
