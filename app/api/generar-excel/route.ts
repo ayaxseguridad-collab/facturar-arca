@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       for (const fila of filas) {
         const codigoPro = String(fila.CODIGOPRO || "").trim();
         const desc = String(fila.NOMBRE || "").trim();
-        const precio = parseFloat(fila.PRECIOFINA || 0);
+        const precio = parseFloat(fila.TOTAL || 0);
         const cantidad = parseFloat(fila.CANTIDAD || 1);
         const uVal = parseFloat(fila.TIP_LETRA || 0);
 
