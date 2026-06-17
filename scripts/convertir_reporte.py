@@ -69,7 +69,7 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
     for fila in filas:
         codigo_pro = str(fila[col["CODIGOPRO"]]).strip()
         desc       = str(fila[col["NOMBRE"]]).strip()
-        precio     = float(fila[col["TOTAL"]] or 0)
+        precio     = float(fila[col["PRECIOFINA"]] or 0)
         cantidad   = float(fila[col["CANTIDAD"]] or 1)
         u_val      = float(fila[col["TIP_LETRA"]] or 0)
 
