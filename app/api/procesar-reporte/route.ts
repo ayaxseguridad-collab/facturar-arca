@@ -81,9 +81,12 @@ export async function POST(req: NextRequest) {
         const uVal = parseFloat(fila.TIP_LETRA || 0);
 
         if (uVal === 5 && codigoPro === "9999") continue;
-        if (uVal === 1 && codigoPro === "9999" && desc.startsWith("(")) continue;
-
-        if (desc.startsWith("REMITOS") || desc.startsWith("Sub-Cuenta:")) {
+        if (uVal === 1 && codigoPro === "9999") {
+          if (desc.startsWith("(")) continue;
+          itemsExtra.push({ desc, cantidad: 1, importe: 0, esRemito: true });
+          continue;
+        }
+        if (desc.startsWith("REMITOS")) {
           itemsExtra.push({ desc, cantidad: 1, importe: 0, esRemito: true });
           continue;
         }

@@ -72,14 +72,17 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
         cantidad   = float(fila[col["CANTIDAD"]] or 1)
         u_val      = float(fila[col["TIP_LETRA"]] or 0)
 
-        # Fila de encabezado (U=5, S='9999', desc='SERVICIOS DEL MES...'): ya la generamos fija
+        # Fila de encabezado (U=5, S='9999'): ya la generamos fija
         if u_val == 5 and codigo_pro == "9999":
             continue
-        # Fila de código SV (U=1, S='9999', desc empieza con '(SV-'): ya la generamos fija
-        if u_val == 1 and codigo_pro == "9999" and desc.startswith("("):
+        # Filas TIP_LETRA=1, CODIGOPRO=9999
+        if u_val == 1 and codigo_pro == "9999":
+            if desc.startswith("("):
+                continue  # fila de código-cuenta: saltar
+            items_extra.append({"desc": desc, "cantidad": 1, "importe": 0.0})
             continue
-        # Remitos y Sub-Cuenta con precio 0: incluir sin importe
-        if desc.startswith("REMITOS") or desc.startswith("Sub-Cuenta:"):
+        # Remitos con precio 0: incluir sin importe
+        if desc.startswith("REMITOS"):
             items_extra.append({"desc": desc, "cantidad": int(cantidad), "importe": 0.0})
             continue
         # Resto: incluir si tienen precio o descripción relevante
