@@ -78,8 +78,8 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
         # Fila de código SV (U=1, S='9999', desc empieza con '(SV-'): ya la generamos fija
         if u_val == 1 and codigo_pro == "9999" and desc.startswith("("):
             continue
-        # Remitos con precio 0: incluir sin importe
-        if desc.startswith("REMITOS"):
+        # Remitos y Sub-Cuenta con precio 0: incluir sin importe
+        if desc.startswith("REMITOS") or desc.startswith("Sub-Cuenta:"):
             items_extra.append({"desc": desc, "cantidad": int(cantidad), "importe": 0.0})
             continue
         # Resto: incluir si tienen precio o descripción relevante

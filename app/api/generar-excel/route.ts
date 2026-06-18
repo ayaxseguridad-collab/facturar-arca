@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
 
         if (uVal === 5 && codigoPro === "9999") continue;
         if (uVal === 1 && codigoPro === "9999" && desc.startsWith("(")) continue;
-        if (desc.startsWith("REMITOS")) {
+        if (desc.startsWith("REMITOS") || desc.startsWith("Sub-Cuenta:")) {
           itemsExtra.push({ desc, cantidad: 1, importe: 0 });
           continue;
         }
