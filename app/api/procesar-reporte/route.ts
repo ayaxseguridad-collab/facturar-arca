@@ -125,20 +125,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // DEBUG: mostrar filas crudas del grupo más grande
-    let debugRows: any[] = [];
-    let maxSize = 0;
-    for (const [, filas] of grupos) {
-      if (filas.length > maxSize) { maxSize = filas.length; debugRows = filas as any[]; }
-    }
-    const debug = debugRows.map((r: any) => ({
-      TIP_LETRA: r.TIP_LETRA,
-      CODIGOPRO: r.CODIGOPRO,
-      NOMBRE: r.NOMBRE,
-      PRECIOFINA: r.PRECIOFINA,
-    }));
-
-    return NextResponse.json({ clientes, mes: mesReal, anio: anioReal, debug });
+    return NextResponse.json({ clientes, mes: mesReal, anio: anioReal });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Error procesando el archivo" }, { status: 500 });
