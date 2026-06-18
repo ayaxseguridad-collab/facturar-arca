@@ -76,7 +76,7 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
         if u_val == 5 and codigo_pro == "9999":
             continue
         # Fila de código SV (U=1, S='9999', desc empieza con '(SV-'): ya la generamos fija
-        if u_val == 1 and codigo_pro == "9999":
+        if u_val == 1 and codigo_pro == "9999" and desc.startswith("("):
             continue
         # Remitos con precio 0: incluir sin importe
         if desc.startswith("REMITOS"):
