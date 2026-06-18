@@ -5,7 +5,8 @@ import ExcelJS from "exceljs";
 const MESES = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
   "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
-const ITEM_BASE_COLS = [14, 18, 22, 26, 30, 34, 38];
+// Base col para ítem i (0-indexed): 14, 18, 22, ... (4 columnas por ítem)
+function itemBase(i: number): number { return 14 + i * 4; }
 
 function nombreDisplay(raw: string): string {
   if (raw.includes(",")) {
@@ -57,7 +58,6 @@ export async function POST(req: NextRequest) {
 
     const wbOut = new ExcelJS.Workbook();
     const wsOut = wbOut.addWorksheet("Hoja1");
-    wsOut.columns = Array.from({ length: 47 }, () => ({ width: 20 }));
 
     let rowIdx = 1;
     for (const [, filas] of grupos) {
@@ -87,17 +87,23 @@ export async function POST(req: NextRequest) {
       }
 
       // Pre-calcular total como valor numérico (ARCA lee el valor cacheado, no la fórmula)
-      const importesCalc = itemsExtra.slice(0, 7).map(item =>
+      const importesCalc = itemsExtra.map(item =>
         modoPrueba
           ? (item.importe > 0 ? Math.round(0.01 * item.cantidad * 100) / 100 : 0)
           : aplicarIva(item.importe, item.desc)
       );
       const totalCalc = Math.round(importesCalc.reduce((s, v) => s + v, 0) * 100) / 100;
 
+      // Ajustar ancho de columnas dinámicamente según cantidad de ítems
+      const totalCols = 13 + itemsExtra.length * 4;
+      if (wsOut.columns.length < totalCols) {
+        wsOut.columns = Array.from({ length: totalCols }, () => ({ width: 20 }));
+      }
+
       wsOut.getCell(r, 1).value = nombre;
       wsOut.getCell(r, 2).value = "CONSUMIDOR FINAL";
-      wsOut.getCell(r, 4).value = null;  // dirección vacía
-      wsOut.getCell(r, 5).value = totalCalc;  // valor, no fórmula
+      wsOut.getCell(r, 4).value = null;
+      wsOut.getCell(r, 5).value = totalCalc;
 
       wsOut.getCell(r, 6).value = 1.0;
       wsOut.getCell(r, 7).value = 1.0;
@@ -109,8 +115,8 @@ export async function POST(req: NextRequest) {
       wsOut.getCell(r, 12).value = `(SV-${sv}) ${clienteRaw}`;
       wsOut.getCell(r, 13).value = 0.0;
 
-      itemsExtra.slice(0, 7).forEach((item, i) => {
-        const base = ITEM_BASE_COLS[i];
+      itemsExtra.forEach((item, i) => {
+        const base = itemBase(i);
         const importeARCA = modoPrueba
           ? (item.importe > 0 ? Math.round(0.01 * item.cantidad * 100) / 100 : 0.0)
           : aplicarIva(item.importe, item.desc);
@@ -119,12 +125,6 @@ export async function POST(req: NextRequest) {
         wsOut.getCell(r, base + 2).value = item.desc || null;
         wsOut.getCell(r, base + 3).value = importeARCA;
       });
-
-      for (let i = itemsExtra.length; i < 7; i++) {
-        const base = ITEM_BASE_COLS[i];
-        wsOut.getCell(r, base).value = float(i + 3);
-        wsOut.getCell(r, base + 3).value = 0.0;
-      }
     }
 
     const outBuffer = await wbOut.xlsx.writeBuffer();

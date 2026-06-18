@@ -20,8 +20,7 @@ COL_TOTAL    = 5   # E  (fórmula)
 # Item 1: col F(6), G(7), H(8), I(9)
 # Item 2: col J(10), K(11), L(12), M(13)
 # Items 3-9: base cols N(14), R(18), V(22), Z(26), AD(30), AH(34), AL(38)
-ITEM_BASE_COLS = [14, 18, 22, 26, 30, 34, 38]
-# Importes sumados en fórmula: Q(17), U(21), Y(25), AC(29), AG(33), AK(37), AO(41)
+# Items 3+: base col = 14 + i*4 (4 columnas por ítem, sin límite)
 
 def nombre_display(cliente_raw: str) -> str:
     """'APELLIDO, NOMBRE' → 'NOMBRE APELLIDO'. Sin coma: duplica."""
@@ -113,10 +112,8 @@ def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
 
         # Calcular importes primero para poder poner el total como valor (no fórmula)
         importes = []
-        for i, item in enumerate(items_extra[:7]):
+        for item in items_extra:
             importes.append(aplicar_iva(item["importe"], item["desc"]) if item["importe"] > 0 else 0.0)
-        for i in range(len(items_extra), 7):
-            importes.append(0.0)
         total = round(sum(importes), 2)
 
         # Bloque fijo
@@ -137,19 +134,13 @@ def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
         ws.cell(r, 12).value = f"(SV-{sv}) {cliente_raw}"
         ws.cell(r, 13).value = 0.0
 
-        # Ítems 3-9
-        for i, item in enumerate(items_extra[:7]):
-            base = ITEM_BASE_COLS[i]
+        # Ítems 3+ (sin límite)
+        for i, item in enumerate(items_extra):
+            base = 14 + i * 4
             ws.cell(r, base).value     = float(i + 3)
             ws.cell(r, base + 1).value = 1.0 if item["desc"] else None
             ws.cell(r, base + 2).value = item["desc"] or None
             ws.cell(r, base + 3).value = importes[i]
-
-        # Relleno vacíos hasta 9
-        for i in range(len(items_extra), 7):
-            base = ITEM_BASE_COLS[i]
-            ws.cell(r, base).value     = float(i + 3)
-            ws.cell(r, base + 3).value = 0.0
 
     wb.save(salida)
     print(f"OK Generado: {salida} ({len(clientes)} clientes)")
