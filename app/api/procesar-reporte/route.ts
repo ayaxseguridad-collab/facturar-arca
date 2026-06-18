@@ -69,7 +69,6 @@ export async function POST(req: NextRequest) {
       const clienteRaw = String(primera.CLIENTE || "");
       const codigoAlfa = String(primera.CODIGOALFA || "");
       const codigoDisplay = codigoAlfa.split('/')[0];
-      const sv = extraerSV(codigoAlfa);
       const nombre = nombreDisplay(clienteRaw);
 
       const itemsExtra = [];
@@ -113,7 +112,7 @@ export async function POST(req: NextRequest) {
       clientes.push({
         nombre,
         clienteRaw,
-        sv,
+        sv: codigoDisplay,
         direccion: "",
         mesNombre,
         anio: anioReal,
