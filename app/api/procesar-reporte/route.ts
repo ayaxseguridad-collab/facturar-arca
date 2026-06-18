@@ -67,7 +67,9 @@ export async function POST(req: NextRequest) {
     for (const [, filas] of grupos) {
       const primera = filas[0] as any;
       const clienteRaw = String(primera.CLIENTE || "");
-      const sv = extraerSV(String(primera.CODIGOALFA || ""));
+      const codigoAlfa = String(primera.CODIGOALFA || "");
+      const codigoDisplay = codigoAlfa.split('/')[0];
+      const sv = extraerSV(codigoAlfa);
       const nombre = nombreDisplay(clienteRaw);
 
       const itemsExtra = [];
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
         const uVal = parseFloat(fila.TIP_LETRA || 0);
 
         if (uVal === 5 && codigoPro === "9999") continue;
-        if (uVal === 1 && codigoPro === "9999" && desc.startsWith("(SV-")) continue;
+        if (uVal === 1 && codigoPro === "9999") continue;
 
         if (desc.startsWith("REMITOS")) {
           itemsExtra.push({ desc, cantidad: 1, importe: 0, esRemito: true });
@@ -109,7 +111,7 @@ export async function POST(req: NextRequest) {
         mesNombre,
         anio: anioReal,
         item1: `SERVICIOS DEL MES "${mesNombre}" DE ${anioReal}`,
-        item2: `(SV-${sv}) ${clienteRaw}`,
+        item2: `(${codigoDisplay}) ${clienteRaw}`,
         items: itemsConImporte,
         totalReal,
         totalARCA: Math.round(totalARCA * 100) / 100,

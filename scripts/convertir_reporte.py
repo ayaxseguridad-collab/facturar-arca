@@ -76,7 +76,7 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
         if u_val == 5 and codigo_pro == "9999":
             continue
         # Fila de código SV (U=1, S='9999', desc empieza con '(SV-'): ya la generamos fija
-        if u_val == 1 and codigo_pro == "9999" and desc.startswith("(SV-"):
+        if u_val == 1 and codigo_pro == "9999":
             continue
         # Remitos con precio 0: incluir sin importe
         if desc.startswith("REMITOS"):
@@ -87,14 +87,15 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
             items_extra.append({"desc": desc, "cantidad": int(cantidad), "importe": precio})
 
     return {
-        "nombre":    nombre,
-        "tipo":      "CONSUMIDOR FINAL",
-        "direccion": direccion,
-        "sv_code":   sv_code,
+        "nombre":      nombre,
+        "tipo":        "CONSUMIDOR FINAL",
+        "direccion":   direccion,
+        "sv_code":     sv_code,
+        "codigo_alfa": codigo_alfa,
         "cliente_raw": cliente_raw,
-        "mes":       mes,
-        "anio":      anio,
-        "items_extra": items_extra,  # ítems 3-9
+        "mes":         mes,
+        "anio":        anio,
+        "items_extra": items_extra,
     }
 
 def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
@@ -105,9 +106,10 @@ def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
     for idx, c in enumerate(clientes):
         r = idx + 1
         mes_nombre = MESES[mes]
-        sv         = c["sv_code"]
-        nombre     = c["nombre"]
+        sv          = c["sv_code"]
+        nombre      = c["nombre"]
         cliente_raw = c["cliente_raw"]
+        codigo_alfa = c["codigo_alfa"]
         items_extra = c["items_extra"]
 
         # Calcular importes primero para poder poner el total como valor (no fórmula)
@@ -131,7 +133,7 @@ def escribir_arca(clientes: list, mes: int, anio: int, salida: str):
         # Ítem 2: código SV + nombre cliente (cols J=10, K=11, L=12, M=13)
         ws.cell(r, 10).value = 2.0
         ws.cell(r, 11).value = 1.0
-        ws.cell(r, 12).value = f"(SV-{sv}) {cliente_raw}"
+        ws.cell(r, 12).value = f"({codigo_alfa.split('/')[0]}) {cliente_raw}"
         ws.cell(r, 13).value = 0.0
 
         # Ítems 3+ (sin límite)

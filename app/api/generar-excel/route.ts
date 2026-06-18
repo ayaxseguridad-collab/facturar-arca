@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
     for (const [, filas] of grupos) {
       const primera = filas[0];
       const clienteRaw = String(primera.CLIENTE || "");
-      const sv = extraerSV(String(primera.CODIGOALFA || ""));
+      const codigoAlfa = String(primera.CODIGOALFA || "");
+      const codigoDisplay = codigoAlfa.split('/')[0];
       const nombre = nombreDisplay(clienteRaw);
       const r = rowIdx++;
 
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
         const uVal = parseFloat(fila.TIP_LETRA || 0);
 
         if (uVal === 5 && codigoPro === "9999") continue;
-        if (uVal === 1 && codigoPro === "9999" && desc.startsWith("(SV-")) continue;
+        if (uVal === 1 && codigoPro === "9999") continue;
         if (desc.startsWith("REMITOS")) {
           itemsExtra.push({ desc, cantidad: 1, importe: 0 });
           continue;
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
       wsOut.getCell(r, 10).value = 2.0;
       wsOut.getCell(r, 11).value = 1.0;
-      wsOut.getCell(r, 12).value = `(SV-${sv}) ${clienteRaw}`;
+      wsOut.getCell(r, 12).value = `(${codigoDisplay}) ${clienteRaw}`;
       wsOut.getCell(r, 13).value = 0.0;
 
       itemsExtra.forEach((item, i) => {
