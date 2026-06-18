@@ -94,12 +94,6 @@ export async function POST(req: NextRequest) {
       );
       const totalCalc = Math.round(importesCalc.reduce((s, v) => s + v, 0) * 100) / 100;
 
-      // Ajustar ancho de columnas dinámicamente según cantidad de ítems
-      const totalCols = 13 + itemsExtra.length * 4;
-      if (wsOut.columns.length < totalCols) {
-        wsOut.columns = Array.from({ length: totalCols }, () => ({ width: 20 }));
-      }
-
       wsOut.getCell(r, 1).value = nombre;
       wsOut.getCell(r, 2).value = "CONSUMIDOR FINAL";
       wsOut.getCell(r, 4).value = null;
