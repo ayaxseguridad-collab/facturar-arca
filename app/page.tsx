@@ -97,7 +97,7 @@ export default function Home() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Facturar ARCA</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Facturar ARCA <span className="text-xs font-normal text-gray-400">v2.2</span></h1>
           <p className="text-gray-500 text-sm">Generador de Excel para importación masiva en ARCA (ex-AFIP)</p>
         </div>
 
