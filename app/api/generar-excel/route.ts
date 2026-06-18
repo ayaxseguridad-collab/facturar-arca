@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
       const r = rowIdx++;
 
       const itemsExtra: { desc: string; cantidad: number; importe: number }[] = [];
+      let pendingSubCuenta: string | null = null;
       for (const fila of filas) {
         const codigoPro = String(fila.CODIGOPRO || "").trim();
         const desc = String(fila.NOMBRE || "").trim();
@@ -78,17 +79,19 @@ export async function POST(req: NextRequest) {
 
         if (uVal === 5 && codigoPro === "9999") continue;
         if (uVal === 1 && codigoPro === "9999") {
-          if (desc.startsWith("(")) continue; // fila de código-cuenta: saltar
-          // Sub-Cuenta u otra fila TIP_LETRA=1 sin "(": incluir como ítem sin precio
-          itemsExtra.push({ desc, cantidad: 1, importe: 0 });
+          if (desc.startsWith("(")) continue;
+          pendingSubCuenta = desc; // guardar Sub-Cuenta, mergear con el siguiente item
           continue;
         }
         if (desc.startsWith("REMITOS")) {
+          pendingSubCuenta = null;
           itemsExtra.push({ desc, cantidad: 1, importe: 0 });
           continue;
         }
         if (precio > 0 || codigoPro !== "9999") {
-          itemsExtra.push({ desc, cantidad, importe: precio });
+          const descFinal = pendingSubCuenta ?? desc;
+          pendingSubCuenta = null;
+          itemsExtra.push({ desc: descFinal, cantidad, importe: precio });
         }
       }
 

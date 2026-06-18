@@ -63,7 +63,8 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
     sv_code      = extraer_sv(codigo_alfa)
     nombre       = nombre_display(cliente_raw)
 
-    items_extra = []  # ítems 3-9 (ABONO, CANON, COBRADOR, REMITOS, equipos…)
+    items_extra = []  # ítems 3+ (ABONO, CANON, COBRADOR, REMITOS, equipos…)
+    pending_sub_cuenta = None
 
     for fila in filas:
         codigo_pro = str(fila[col["CODIGOPRO"]]).strip()
@@ -79,15 +80,18 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
         if u_val == 1 and codigo_pro == "9999":
             if desc.startswith("("):
                 continue  # fila de código-cuenta: saltar
-            items_extra.append({"desc": desc, "cantidad": 1, "importe": 0.0})
+            pending_sub_cuenta = desc  # mergear con el siguiente item
             continue
         # Remitos con precio 0: incluir sin importe
         if desc.startswith("REMITOS"):
+            pending_sub_cuenta = None
             items_extra.append({"desc": desc, "cantidad": int(cantidad), "importe": 0.0})
             continue
         # Resto: incluir si tienen precio o descripción relevante
         if precio > 0 or codigo_pro not in ("9999",):
-            items_extra.append({"desc": desc, "cantidad": int(cantidad), "importe": precio})
+            desc_final = pending_sub_cuenta if pending_sub_cuenta else desc
+            pending_sub_cuenta = None
+            items_extra.append({"desc": desc_final, "cantidad": int(cantidad), "importe": precio})
 
     return {
         "nombre":      nombre,

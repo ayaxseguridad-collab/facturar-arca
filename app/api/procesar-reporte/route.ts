@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       const nombre = nombreDisplay(clienteRaw);
 
       const itemsExtra = [];
+      let pendingSubCuenta: string | null = null;
       for (const fila of filas as any[]) {
         const codigoPro = String(fila.CODIGOPRO || "").trim();
         const desc = String(fila.NOMBRE || "").trim();
@@ -83,15 +84,18 @@ export async function POST(req: NextRequest) {
         if (uVal === 5 && codigoPro === "9999") continue;
         if (uVal === 1 && codigoPro === "9999") {
           if (desc.startsWith("(")) continue;
-          itemsExtra.push({ desc, cantidad: 1, importe: 0, esRemito: true });
+          pendingSubCuenta = desc;
           continue;
         }
         if (desc.startsWith("REMITOS")) {
+          pendingSubCuenta = null;
           itemsExtra.push({ desc, cantidad: 1, importe: 0, esRemito: true });
           continue;
         }
         if (precio > 0 || (codigoPro !== "9999")) {
-          itemsExtra.push({ desc, cantidad, importe: precio });
+          const descFinal = pendingSubCuenta ?? desc;
+          pendingSubCuenta = null;
+          itemsExtra.push({ desc: descFinal, cantidad, importe: precio });
         }
       }
 
