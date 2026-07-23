@@ -79,8 +79,11 @@ export async function POST(req: NextRequest) {
 
         if (uVal === 5 && codigoPro === "9999") continue;
         if (uVal === 1 && codigoPro === "9999") {
-          if (desc.startsWith("(")) continue;
-          pendingSubCuenta = desc; // guardar Sub-Cuenta, mergear con el siguiente item
+          if (!desc.startsWith("(")) {
+            pendingSubCuenta = desc; // "Sub-Cuenta:..." — prioridad alta
+          } else if (!pendingSubCuenta) {
+            pendingSubCuenta = desc; // "(AY-xxxx/0) NOMBRE" — fallback si no hay Sub-Cuenta
+          }
           continue;
         }
         if (desc.startsWith("REMITOS")) {

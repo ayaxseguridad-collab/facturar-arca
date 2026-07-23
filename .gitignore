@@ -43,3 +43,5 @@ next-env.d.ts
 # archivos locales
 *.xlsx
 scripts/test-api.mjs
+
+.vercel
