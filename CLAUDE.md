@@ -1,40 +1,91 @@
 @AGENTS.md
 
-# ⚠️ PROYECTO: prepara-excel-facturar — Generador de Excel para ARCA
+# ⚠️ PROYECTO: Preparar Excel para facturar
 
-## NUNCA CONFUNDIR CON factura-arca
+Toma el reporte de clientes que sale de **Bykom** y arma el Excel que después se
+carga en el facturador. **No emite facturas**: sólo transforma un archivo en
+otro.
 
 | Dato | Valor |
 |------|-------|
-| **Repo GitHub** | `ayaxseguridad-collab/prepara-excel-facturar` |
-| **Vercel proyecto** | DISTINTO a `facturar-arca-app` |
-| **URL producción** | NO es https://facturar-arca-app.vercel.app |
-| **Directorio local** | `C:\Users\gt\OneDrive\Desktop\PROGRAMACION\prepara-excel-facturar` |
+| **Repo GitHub** | `ayaxseguridad-collab/facturar-arca` — ⚠️ **público** |
+| **Producción** | https://app-production-df57.up.railway.app |
+| **Railway** | servicio `app`, rama `master` |
+| **Directorio local** | `~/Escritorio/CLOUDE/facturar-arca` |
+| **Acceso** | usuario `ayax`; la clave está en `publicar.sh` y en el acceso directo del Escritorio |
 
-## QUÉ HACE ESTE PROYECTO
-- Prepara archivos Excel para importar facturas en el portal ARCA/AFIP
-- NO emite facturas directamente — solo genera el Excel de carga
+## NO CONFUNDIR CON `factura-arca`
 
-## QUÉ NO ES
-- NO es el sistema de facturación electrónica (WSFEv1/SOAP)
-- NO va a `facturar-arca-app.vercel.app`
-- NO se debe linkear al Vercel project `facturar-arca-app`
+Son dos proyectos y los nombres se parecen demasiado:
 
-## PROYECTO DE FACTURACIÓN REAL
-- Directorio: `C:\Users\gt\Claude\Projects\Facturar en Afip`
-- Vercel: `facturar-arca-app` → https://facturar-arca-app.vercel.app
-- Restore point: tag `restore-2026-06-14`
+| | este | el otro |
+|---|---|---|
+| carpeta | `facturar-arca` | `factura-arca` |
+| qué hace | arma el Excel | emite contra AFIP (WSFEv1/SOAP) |
+| producción | app-production-df57 | facturar-arca-production |
+| base de datos | ninguna | Convex `glad-weasel-825` |
 
-<!-- convex-ai-start -->
+Este archivo decía antes que el repo era `prepara-excel-facturar` y que producía
+en Vercel. **Las dos cosas son falsas.**
 
-This project uses [Convex](https://convex.dev) as its backend.
+## CÓMO SE DEPLOYA
 
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
+`git push origin master`. Railway está conectado al repo y publica solo; tarda
+unos minutos.
 
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
+**No hay forma de confirmar desde afuera que el deploy entró.** El header dice
+`v2.2` fijo desde junio de 2026 y no se actualiza (GAS-233). Si algo sigue
+saliendo mal después de un push, puede ser que Railway todavía no haya
+terminado: esperar y volver a probar antes de dar el cambio por fallido.
 
-<!-- convex-ai-end -->
+`publicar.sh` **no hace falta** para desplegar: sirvió una sola vez para crear el
+proyecto en Railway. Volver a correrlo **pisa la contraseña** con la que tenga
+escrita adentro (GAS-232).
+
+`preparar-excel.sh` levanta la app en esta PC, en el puerto 3100.
+
+## LA LÓGICA ESTÁ COPIADA EN TRES ARCHIVOS
+
+El mismo recorrido del reporte de Bykom está duplicado en:
+
+1. `app/api/procesar-reporte/route.ts` — la vista previa en pantalla
+2. `app/api/generar-excel/route.ts` — el Excel que se descarga
+3. `scripts/convertir_reporte.py` — el script suelto, por fuera de la web
+
+**Tocar uno solo hace que la pantalla y el archivo digan cosas distintas.** Ya
+pasó: el bug de septiembre de 2026 (GAS-230) nació de un cambio aplicado a los
+tres, y el arreglo hubo que hacerlo también en los tres.
+
+## LA TRAMPA DE `pendingSubCuenta`
+
+Cuando una fila del reporte tiene `TIP_LETRA=1` y `CODIGOPRO=9999`, su
+descripción se guarda y **pisa la descripción del ítem siguiente**:
+
+```js
+const descFinal = pendingSubCuenta ?? desc;
+```
+
+Eso es a propósito para las filas `Sub-Cuenta: …`. Pero si la condición se
+afloja para que entren también las filas `(SV-xxxx) APELLIDO, NOMBRE`, se come
+el `ABONO MONITOREO` de todos los abonados comunes — que son casi todos. Es
+exactamente lo que rompió septiembre.
+
+Antes de tocar esa parte, leer GAS-230 y GAS-231.
+
+## NO USA BASE DE DATOS
+
+La carpeta `convex/` existe pero **ninguna parte de la app la usa** (GAS-234).
+No hay backend que desplegar ni datos que migrar: la app recibe un archivo,
+lo transforma y devuelve otro, sin guardar nada.
+
+## CÓMO PROBAR UN CAMBIO
+
+Hace falta un reporte de Bykom de verdad; los Excel ya generados no sirven para
+probar el generador. Con el reporte:
+
+```
+./preparar-excel.sh      # levanta en localhost:3100
+```
+
+Cargarlo, y mirar que la columna **P** diga `ABONO MONITOREO` y no el nombre del
+cliente repetido de la **L**.
