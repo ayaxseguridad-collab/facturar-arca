@@ -78,10 +78,9 @@ def procesar_cliente(filas: list, col: dict, mes: int, anio: int, direccion: str
             continue
         # Filas TIP_LETRA=1, CODIGOPRO=9999
         if u_val == 1 and codigo_pro == "9999":
-            if not desc.startswith("("):
-                pending_sub_cuenta = desc  # "Sub-Cuenta:..." — prioridad alta
-            elif not pending_sub_cuenta:
-                pending_sub_cuenta = desc  # "(AY-xxxx/0) NOMBRE" — fallback
+            if desc.startswith("("):
+                continue  # fila de código-cuenta: saltar
+            pending_sub_cuenta = desc  # mergear con el siguiente item
             continue
         # Remitos con precio 0: incluir sin importe
         if desc.startswith("REMITOS"):
